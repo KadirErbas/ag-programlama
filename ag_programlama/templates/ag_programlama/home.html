@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" 
+    integrity="sha384-xOolHFLEh07PJGoPkLv1IbcEPTNtaed2xpHsD9ESMhqIYd0nLMwNLD69Npy4HI+N" crossorigin="anonymous">    
+    
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBTLvS5jcAOYDm91TyMg5yG9jw9n9dqlxw&libraries=places"></script>
+</head>
+<body onload="initMap()">
+    <br>
+    <h1 class="text-center"> Abdulkadir ERBAŞ</h1>
+
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-md-5 mb-3">
+                <div class="form-group">
+                    <input id="source" type="text" class="form-control" placeholder="Başlangıç Noktası">
+                </div>
+            </div>
+            <div class="col-md-5 mb-3">
+                <div class="form-group">
+                    <input id="dest" type="text" class="form-control" placeholder="Gidiş Noktası">
+                </div>
+            </div>
+            <div class="col-md-2 mb-3">
+                <div class="form-group">
+                    <select id="mode" class="form-control" onchange="calcRoute();">
+                        <option value="DRIVING">Araçla</option>
+                        <option value="WALKING">Yürüyerek</option>
+                        <option value="BICYCLING">Bisikletle</option>
+                        <option value="TRANSIT">Transit</option>
+                    </select>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="form-group">
+                    <input id="date" type="date" class="form-control" placeholder="Yolculuk Tarihi">
+                </div>
+            </div>
+            <div class="col-12 mb-3">
+                <button class="btn btn-primary btn-block" onclick="checkAndCalcRoute()">Yön ve Mesafe Getir</button>
+            </div>
+            <div class="col-12">
+                <div id="map" style="height: 500px; width: 100%;"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container"> 
+        <div class=" mt-5"> 
+            <div class="form-row justify-content-center">
+                <div class="form-group col-md-6">
+                    <ul class="list-group mb-4">
+                        <li class="list-group-item text-center text-primary font-weight-bold mr-1">AÇIKLAMALAR</li>
+                        <li class="list-group-item" id="distance">Mesafe : </li>
+                        <li class="list-group-item" id="time">Zaman : </li>
+                        <li class="list-group-item" id="speed">Hız : </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="container mt-4 mb-5">
+            <div class="row justify-content-center">
+                <div class="col-md-6">
+                    <div class="input-group mb-3">
+                        <input type="number" id="lspeed" name="lspeed" class="form-control" placeholder="Hız Gir">
+                        <div class="input-group-append">
+                            <span class="input-group-text">km/saat</span>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary btn-block mb-3" onclick="timeCalculateBySpeed()">Zamanı Hesapla</button>
+                    <p id="calculated-speed" class="text-primary font-weight-bold text-center">Tahmini Varış Süresi:</p>
+                </div>
+            </div>
+        </div>
+        
+    </div>
+
+    <br>
+
+ 
+    <div class="container mt-5" >
+        <h3 class="text-center text-primary font-weight-bold mr-1"> Düzergah boyunca hava durumu verileri</h3>
+        <div class="row g-4 py-5 row-cols-1 row-cols-lg-3" id="weather-container">
+
+            <!--
+            <div class="col-md-6 col-lg-6 col-xl-4 mb-2">
+    
+              <div class="card text-body" style=" border-radius: 35px;">
+                <div class="card-body p-4">
+    
+                  <div class="d-flex">
+                    <h6 class="flex-grow-1">Warsaw</h6>
+                    <h6>15:07</h6>
+                  </div>
+    
+                  <div class="d-flex flex-column text-center mt-5 mb-4">
+                    <h6 class="display-4 mb-0 font-weight-bold"> 13°C </h6>
+                    <span class="small" style="color: #868B94">Stormy</span>
+                  </div>
+    
+                  <div class="d-flex align-items-center">
+                    <div class="flex-grow-1" style="font-size: 1rem;">
+                      <div><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-wind" viewBox="0 0 16 16" style="color: #868B94;">
+                        <path d="M12.5 2A2.5 2.5 0 0 0 10 4.5a.5.5 0 0 1-1 0A3.5 3.5 0 1 1 12.5 8H.5a.5.5 0 0 1 0-1h12a2.5 2.5 0 0 0 0-5m-7 1a1 1 0 0 0-1 1 .5.5 0 0 1-1 0 2 2 0 1 1 2 2h-5a.5.5 0 0 1 0-1h5a1 1 0 0 0 0-2M0 9.5A.5.5 0 0 1 .5 9h10.042a3 3 0 1 1-3 3 .5.5 0 0 1 1 0 2 2 0 1 0 2-2H.5a.5.5 0 0 1-.5-.5"/>
+                      </svg> <span class="ms-1"> 40 km/h </span>
+                      </div>
+                      <div><i class="fa-solid fa-wind" style="color: #868B94;"></i> <span class="ms-1"> 84% </span></div>
+                      <div><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-moisture" viewBox="0 0 16 16">
+                        <path d="M13.5 0a.5.5 0 0 0 0 1H15v2.75h-.5a.5.5 0 0 0 0 1h.5V7.5h-1.5a.5.5 0 0 0 0 1H15v2.75h-.5a.5.5 0 0 0 0 1h.5V15h-1.5a.5.5 0 0 0 0 1h2a.5.5 0 0 0 .5-.5V.5a.5.5 0 0 0-.5-.5zM7 1.5l.364-.343a.5.5 0 0 0-.728 0l-.002.002-.006.007-.022.023-.08.088a29 29 0 0 0-1.274 1.517c-.769.983-1.714 2.325-2.385 3.727C2.368 7.564 2 8.682 2 9.733 2 12.614 4.212 15 7 15s5-2.386 5-5.267c0-1.05-.368-2.169-.867-3.212-.671-1.402-1.616-2.744-2.385-3.727a29 29 0 0 0-1.354-1.605l-.022-.023-.006-.007-.002-.001zm0 0-.364-.343zm-.016.766L7 2.247l.016.019c.24.274.572.667.944 1.144.611.781 1.32 1.776 1.901 2.827H4.14c.58-1.051 1.29-2.046 1.9-2.827.373-.477.706-.87.945-1.144zM3 9.733c0-.755.244-1.612.638-2.496h6.724c.395.884.638 1.741.638 2.496C11 12.117 9.182 14 7 14s-4-1.883-4-4.267"/>
+                      </svg> <span class="ms-1"> 0.2h </span></div>
+                    </div>
+                    <div>
+                        <img src="http://openweathermap.org/img/wn/01d@2x.png" width="100px" alt="Weather icon">
+                    </div>
+                  </div>
+    
+                </div>
+              </div>
+            </div>
+            -->
+        
+        </div>
+    </div>
+    
+    <div id="tickets-container"></div>
+    
+    <br>
+
+    <hr>
+    <marquee direction="right" scrollamount="8"><img src="https://www.animatedimages.org/data/media/425/animated-bus-image-0018.gif" height="100px"></marquee>
+    <hr>
+
+    <blockquote class="blockquote text-center">
+        <p class="mb-0">
+            Yolcu oldum karakışta, gülüzarda yaz içimde. 
+        </p>
+        <p class="mb-0">  
+            Dosta doğru gider yolum, rehberim yok iz içimde.    
+        </p>
+        <p class="mb-0">  
+            Yörüngem insan sevgisi, gönlüm görür göz içimde.    
+        </p>
+        <p class="mb-0"> 
+            Can içinde canan durur, aşkla harman sez içimde.   
+        </p>
+        <footer class="blockquote-footer">Yusuf ÇILDIR <cite title="Source Title">Dost Yusuf</cite></footer>
+      </blockquote>
+    <hr>
+    <marquee direction="right"><img src="https://www.hareketligifler.net/data/media/425/otobus-hareketli-resim-0029.gif" height="100px"></marquee>
+    <hr>
+
+    <footer class="py-3 my-4">
+        <p class="text-center text-body-secondary">© 2024 Ağ Programlama dersi kapsamında hazırlanmıştır.</p>
+    </footer>
+
+    <script>
+        let map, directionsService, directionsRenderer;
+        let sourceAutocomplete, desAutocomplete;
+        var mesafe;
+        let markers = [        
+            {lat: 36.99717027221463, lng: 35.2641728066932, name: "Adana Otobüs Terminali",},
+            {lat: 37.76313157125923, lng: 38.28082403107417, name: "Adıyaman Otobüs Terminali",},
+            {lat: 38.790718182557015, lng: 30.51055789985003, name: "Afyonkarahisar Otobüs Terminali",},
+            {lat: 39.71424577797458, lng: 43.00333096641574, name: "Ağrı Otobüs Terminali",},
+            {lat: 40.705802970273425, lng: 35.80328186320197, name: "Amasya Otobüs Terminali",},
+            {lat: 39.9183241645135, lng: 32.81266155175474, name: "Ankara Otobüs Terminali", info: "Ankara Otobüs Terminali: Ankara'nın ana otobüs terminali."},
+            {lat: 36.922030583241394, lng: 30.66501794126279, name: "Antalya Otobüs Terminali",},
+            {lat: 41.178179082448715, lng: 41.843630419819284, name: "Artvin Otobüs Terminali",},
+            {lat: 37.79732257377678, lng: 27.839958277703168, name: "Aydın Otobüs Terminali",},
+            {lat: 39.67729775182139, lng: 27.942235537809342, name: "Balıkesir Otobüs Terminali",},
+            {lat: 40.1340987582339, lng: 30.021653907676672, name: "Bilecik Otobüs Terminali",},
+            {lat: 38.906208316685884, lng: 40.543057359870545, name: "Bingöl Otobüs Terminali",},
+            {lat: 38.48819950526719, lng: 42.18722099293216, name: "Bitlis Otobüs Terminali",},
+            {lat: 40.73426756013592, lng: 39.24514162478278, name: "Bolu Otobüs Terminali",},
+            {lat: 37.73723021694923, lng: 30.309545665526745, name: "Burdur Otobüs Terminali",},
+            {lat: 40.269110897178685, lng: 29.051782372240172, name: "Bursa Otobüs Terminali",},
+            {lat: 40.1506134076476, lng: 26.456457887254555, name: "Çanakkale Otobüs Terminali",},
+            {lat: 40.592491698233395, lng: 33.62028196830682, name: "Çankırı Otobüs Terminali",},
+            {lat: 38.664758534722225, lng: 34.92442676437137, name: "Çorum Otobüs Terminali",},
+            {lat: 37.78528127696594, lng: 29.09103332202331, name: "Denizli Otobüs Terminali",},
+            {lat: 37.91976172241578, lng: 40.13501205085685, name: "Diyarbakır Otobüs Terminali",},
+            {lat: 41.63203319048895, lng: 26.618272779726198, name: "Edirne Otobüs Terminali",},  
+            {lat: 38.664758534722225, lng: 39.24514162478278, name: "Elazığ Otobüs Terminali",},
+            {lat: 39.74479057770166, lng: 39.5002301815433, name: "Erzincan Otobüs Terminali",},
+            {lat: 39.96112391172139, lng: 41.22031357120111, name: "Erzurum Otobüs Terminali",},
+            {lat: 39.77577241453179, lng: 30.553202759986387, name: "Eskişehir Otobüs Terminali",},
+            {lat: 37.10175951352632, lng: 37.402152610367345, name: "Gaziantep Otobüs Terminali",},
+            {lat: 40.91090824350841, lng: 38.34541953827948, name: "Giresun Otobüs Terminali",},
+            {lat: 36.99717027221463, lng: 35.2641728066932, name: "Gümüşhane Otobüs Terminali",},
+            {lat: 37.55811769482132, lng: 43.74949137006406, name: "Hakkari Otobüs Terminali",},
+            {lat: 36.231438486335406, lng: 36.136064198365105, name: "Hatay  Otobüs Terminali",},
+            {lat: 36.99717027221463, lng: 35.2641728066932, name: "Isparta Otobüs Terminali",},
+            {lat: 36.85375234457692, lng: 34.590216778537695, name: "Mersin Otobüs Terminali",},
+            {lat: 41.040268714938065, lng: 28.894632728648848, name: "İstanbul Otobüs Terminali", info: "İstanbul Otobüs Terminali: İstanbul'un ana otobüs terminali."},
+            {lat: 38.430683397724934, lng: 27.213377464415203, name: "İzmir  Otobüs Terminali",},
+            {lat: 40.63290116566874, lng: 43.13310853187198, name: "Kars  Otobüs Terminali",},
+            {lat: 41.41899898633792, lng: 33.791651277908, name: "Kastamonu Otobüs Terminali",},
+            {lat: 38.749008690049536, lng: 35.40290064351446, name: "Kayseri  Otobüs Terminali",},
+            {lat: 41.73121638812324, lng: 27.22440671122154, name: "Kırklareli  Otobüs Terminali",},
+            {lat: 39.12695789277563, lng: 34.19056702579122, name: "Kırşehir  Otobüs Terminali",},
+            {lat: 40.7760307467266, lng: 29.97432293082517, name: "Kocaeli  Otobüs Terminali",},
+            {lat: 37.95069800981414, lng: 32.50953642208671, name: "Konya Otobüs Terminali",},
+            {lat: 39.44241040079116, lng: 30.006404058332375, name: "Kütahya Otobüs Terminali",},
+            {lat: 38.341658381961054, lng: 38.255805443514866, name: "Malatya Otobüs Terminali",},
+            {lat: 38.6374039263366, lng: 27.44561371426294, name: "Manisa Otobüs Terminali",},
+            {lat: 37.552660141372186, lng: 36.92046711838334, name: "Kahramanmaraş Otobüs Terminali",},
+            {lat: 37.3271077572255, lng: 40.75956803742934, name: "Mardin Otobüs Terminali",},
+            {lat: 37.20924789548016, lng: 28.35851940556837, name: "Muğla Otobüs Terminali",},
+            {lat: 38.74798531379671, lng: 41.507061822086506, name: "Muş Otobüs Terminali",},
+            {lat: 38.58956666290317, lng: 34.67854059325249, name: "Nevşehir Otobüs Terminali",},
+            {lat: 37.97099203998915, lng: 34.68496663557836, name: "Niğde Otobüs Terminali",},
+            {lat: 40.9622931437495, lng: 37.906802228168736, name: "Ordu Otobüs Terminali",},
+            {lat: 41.032504094475115, lng: 40.511131064414, name: "Rize Otobüs Terminali",},
+            {lat: 40.72976910459874, lng: 30.37971242208728, name: "Sakarya Otobüs Terminali",},
+            {lat: 41.28713267490557, lng: 36.28938693372518, name: "Samsun Otobüs Terminali",},
+            {lat: 37.94077931806553, lng: 41.91228177790791, name: "Siirt Otobüs Terminali",},
+            {lat: 42.00697764751585, lng: 35.08630537790345, name: "Sinop Otobüs Terminali",},
+            {lat: 39.734572474687894, lng: 37.02157824721816, name: "Sivas Otobüs Terminali",},
+            {lat: 41.0007401808789, lng: 27.509633277907106, name: "Tekirdağ Otobüs Terminali",},
+            {lat: 40.32830425666666, lng: 36.55938183557993, name: "Tokat Otobüs Terminali",},
+            {lat: 40.99650366087245, lng: 39.751940325791544, name: "Trabzon Otobüs Terminali",},
+            {lat: 39.107792236219375, lng: 39.54584108954604, name: "Tunceli Otobüs Terminali",},
+            {lat: 37.18651983158661, lng: 38.80425006070983, name: "Şanlıurfa Otobüs Terminali",},
+            {lat: 38.67488092039181, lng: 29.39049163002142, name: "Uşak Otobüs Terminali",},
+            {lat: 38.51329580253099, lng: 43.37849463557935, name: "Van Otobüs Terminali",},
+            {lat: 39.823714660199485, lng: 34.81679003557863, name: "Yozgat Otobüs Terminali",},
+            {lat: 41.45340410161019, lng: 31.776302100069675, name: "Zonguldak Otobüs Terminali",},
+            {lat: 38.3587076762785, lng: 33.983987913095284, name: "Aksaray Otobüs Terminali",},
+            {lat: 40.20642253372628, lng: 40.20642253372628, name: "Bayburt Otobüs Terminali",},
+            {lat: 37.18402879739343, lng: 33.19337937790766, name: "Karaman Otobüs Terminali",},
+            {lat: 39.85629618197289, lng: 33.48418580303888, name: "Kırıkkale Otobüs Terminali",},
+            {lat: 37.90663811109797, lng: 41.11074657420325, name: "Batman Otobüs Terminali",},
+            {lat: 37.51874600671414, lng: 42.44418004721719, name: "Şırnak Otobüs Terminali",},
+            {lat: 41.57511188257086, lng: 32.32593759325086, name: "Bartın Otobüs Terminali",},
+            {lat: 41.111241873969036, lng: 42.69686543743086, name: "Ardahan Otobüs Terminali",},
+            {lat: 39.92493787939219, lng: 44.023378275816725, name: "Iğdır Otobüs Terminali",},
+            {lat: 40.63398266121168, lng: 29.27372172394033, name: "Yalova Otobüs Terminali",},
+            {lat: 41.19656852288917, lng: 32.62543020674375, name: "Karabük Otobüs Terminali",},
+            {lat: 36.710015207512434, lng: 37.11874896071041 , name: "Kilis Otobüs Terminali",},
+            {lat: 37.10095322222572, lng: 36.244230104890434, name: "Osmaniye Otobüs Terminali",},
+            {lat: 40.82807185853441, lng: 31.167734050924235, name: "Düzce Otobüs Terminali",},        
+        ];
+
+
+        function initMap() {
+            directionsService = new google.maps.DirectionsService();
+            directionsRenderer = new google.maps.DirectionsRenderer();
+            var center = new google.maps.LatLng(39.92077, 34.85411); // Centered on Turkey
+            var mapOptions = {
+                zoom: 6,
+                center: center
+            };
+            map = new google.maps.Map(document.getElementById('map'), mapOptions);
+            directionsRenderer.setMap(map);
+            sourceAutocomplete = new google.maps.places.Autocomplete(document.getElementById('source'));
+            desAutocomplete = new google.maps.places.Autocomplete(document.getElementById('dest'));
+
+            var infoWindow = new google.maps.InfoWindow();
+
+            const icon = {
+                url: "https://cdn-icons-png.flaticon.com/512/3448/3448339.png",
+                scaledSize: new google.maps.Size(30, 30), // scaled size
+            };
+            for (var i = 0; i < markers.length; i++) {
+                var marker = new google.maps.Marker({
+                    position: markers[i],
+                    map: map,
+                    title: markers[i].name,
+                    icon: icon
+                });
+
+                (function(marker, i) {
+                    google.maps.event.addListener(marker, 'click', function() {
+                        infoWindow.setContent(markers[i].name);
+                        infoWindow.open(map, marker);
+                    });
+                })(marker, i);
+            }
+            createUserLocationMarker();
+        }
+
+        function calcRoute() {
+            var start = document.getElementById('source').value;
+            var end = document.getElementById('dest').value;
+            var selectedMode = document.getElementById('mode').value;
+            var apiKeyGeocode = "AIzaSyBTLvS5jcAOYDm91TyMg5yG9jw9n9dqlxw";
+            var openWeatherApiKey = "350885a2342e38dcacddb6260a9f4e9b";
+            var collectApiKey = "apikey 66oJTceaR2rJ6Sdzx56nhm:7psLaL2zOq1kAJSSWNZZfe";
+            
+            if (!start || !end) {
+                alert("Lütfen başlangıç ve varış noktalarını girin.");
+                return;
+            }
+            var geocodeUrlStart = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(start)}&key=${apiKeyGeocode}`;
+            var geocodeUrlEnd = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(end)}&key=${apiKeyGeocode}`;
+            var cityStart;
+            var cityEnd;
+            fetch(geocodeUrlStart)
+            .then(response => response.json())
+            .then(data => {
+                cityStart = getCityFromGeocodeData(data);
+
+                return fetch(geocodeUrlEnd);
+            })
+            .then(response => response.json())
+            .then(data => {
+                cityEnd = getCityFromGeocodeData(data);
+                console.log("başlangıç"+ cityStart.toLowerCase()+"varış:"+cityEnd.toLowerCase());
+
+                // Collect API çağrısı
+               // getBusTicketData(cityStart, cityEnd, collectApiKey);
+                
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+            
+            
+            var request = {
+                origin: start,
+                destination: end,
+                travelMode: google.maps.TravelMode[selectedMode],
+                unitSystem: google.maps.UnitSystem.METRIC
+            };
+
+            directionsService.route(request, function(result, status) {
+                if (status == google.maps.DirectionsStatus.OK) {
+                    directionsRenderer.setDirections(result);
+                    calculateDistance(result);
+
+                    // Rota üzerindeki koordinatları al
+                    var route = result.routes[0].legs[0];
+                    var trackPoints = [];
+                    for (var i = 0; i < route.steps.length; i++) {
+                        var step = route.steps[i];
+                        var lat = step.start_location.lat();
+                        var lon = step.start_location.lng();
+                        var dt = Math.floor(Date.now() / 1000);  // Unix zaman formatı
+                        trackPoints.push({ lat: lat, lon: lon, dt: dt });
+                    }
+                   // console.log(trackPoints);
+                    // OpenWeatherMap API'ye trackPoints gönder
+                  getWeatherDataForTrackPoints(trackPoints, openWeatherApiKey);
+                } else {
+                    alert("Rota bulunamadı: " + status);
+                }
+            });
+
+        }
+
+        function getWeatherDataForTrackPoints(trackPoints, apiKey) {
+            trackPoints.forEach(point => {
+                var weatherUrl = `https://api.openweathermap.org/data/2.5/weather?lat=${point.lat}&lon=${point.lon}&appid=${apiKey}&units=metric&lang=tr`;
+        
+                fetch(weatherUrl)
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log(`Weather for (${point.lat}, ${point.lon}):`, data);
+                        displayWeatherData(point, data);
+                    })
+                    .catch(error => {
+                        console.error('Error fetching weather data:', error);
+                    });
+            });
+        }
+        function displayWeatherData(point, weatherData) {
+            console.log("weather data: "+weatherData);
+            var weatherContainer = document.getElementById('weather-container');
+            
+            if (!weatherContainer) {
+                console.error('Error: weatherContainer element not found.');
+                return;
+            }
+            var city = weatherData.name;
+            var country = weatherData.sys.country;
+
+            var temperature = weatherData.main.temp;
+            var description = weatherData.weather[0].description;
+            var modDesc = description[0].toUpperCase();
+            var windSpeed = weatherData.wind.speed;
+            var humidity = weatherData.main.humidity; // Nem oranı
+            var icon = weatherData.weather[0].icon; // Hava durumu simgesi
+            console.log("icon: "+icon);
+            var dateTime = new Date(point.dt * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            var minTemperature = weatherData.main.temp_min;
+            var maxTemperature = weatherData.main.temp_max;
+
+            var weatherCard = `
+            <div class="col-md-4 col-lg-4 col-xl-3 mb-4">
+    
+                <div class="card text-body" style=" border-radius: 35px;">
+                  <div class="card-body p-4">
+      
+                    <div class="d-flex">
+                      <h6 class="flex-grow-1">${city}, ${country}</h6>
+                      <h6>${dateTime}</h6>
+                    </div>
+      
+                    <div class="d-flex flex-column text-center mt-5 mb-4">
+                      <h6 class="display-4 mb-0 font-weight-bold"> ${Math.round(temperature)}°C </h6>
+                      <span class="small" style="color: #868B94">${modDesc}</span>
+                      <span class="small" style="color: #868B94">${Math.round(minTemperature)}°c / ${Math.round(maxTemperature)}°c</span> 
+                    </div>
+      
+                    <div class="d-flex align-items-center">
+                      <div class="flex-grow-1" style="font-size: 1rem;">
+                        <div><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-wind" viewBox="0 0 16 16" style="color: #868B94;">
+                            <path d="M12.5 2A2.5 2.5 0 0 0 10 4.5a.5.5 0 0 1-1 0A3.5 3.5 0 1 1 12.5 8H.5a.5.5 0 0 1 0-1h12a2.5 2.5 0 0 0 0-5m-7 1a1 1 0 0 0-1 1 .5.5 0 0 1-1 0 2 2 0 1 1 2 2h-5a.5.5 0 0 1 0-1h5a1 1 0 0 0 0-2M0 9.5A.5.5 0 0 1 .5 9h10.042a3 3 0 1 1-3 3 .5.5 0 0 1 1 0 2 2 0 1 0 2-2H.5a.5.5 0 0 1-.5-.5"/>
+                          </svg> <span class="ms-1">${windSpeed} km/h</span>
+                        </div>
+                        <div><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-moisture" viewBox="0 0 16 16" style="color: #868B94;">
+                            <path d="M13.5 0a.5.5 0 0 0 0 1H15v2.75h-.5a.5.5 0 0 0 0 1h.5V7.5h-1.5a.5.5 0 0 0 0 1H15v2.75h-.5a.5.5 0 0 0 0 1h.5V15h-1.5a.5.5 0 0 0 0 1h2a.5.5 0 0 0 .5-.5V.5a.5.5 0 0 0-.5-.5zM7 1.5l.364-.343a.5.5 0 0 0-.728 0l-.002.002-.006.007-.022.023-.08.088a29 29 0 0 0-1.274 1.517c-.769.983-1.714 2.325-2.385 3.727C2.368 7.564 2 8.682 2 9.733 2 12.614 4.212 15 7 15s5-2.386 5-5.267c0-1.05-.368-2.169-.867-3.212-.671-1.402-1.616-2.744-2.385-3.727a29 29 0 0 0-1.354-1.605l-.022-.023-.006-.007-.002-.001zm0 0-.364-.343zm-.016.766L7 2.247l.016.019c.24.274.572.667.944 1.144.611.781 1.32 1.776 1.901 2.827H4.14c.58-1.051 1.29-2.046 1.9-2.827.373-.477.706-.87.945-1.144zM3 9.733c0-.755.244-1.612.638-2.496h6.724c.395.884.638 1.741.638 2.496C11 12.117 9.182 14 7 14s-4-1.883-4-4.267"/>
+                          </svg> <span class="ms-1"> ${humidity} %</span>
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <img src="http://openweathermap.org/img/wn/${icon}@2x.png" width="100px" alt="Weather icon">
+                      </div>
+                    
+                    </div>
+      
+                  </div>
+                </div>
+              </div>
+            `;
+        
+            weatherContainer.innerHTML += weatherCard;
+        }
+        
+
+        function calculateDistance(result) {
+            // Yol mesafesini ve süresini hesaplayın
+            var distanceText = result.routes[0].legs[0].distance.text;
+            var durationText = result.routes[0].legs[0].duration.text;
+        
+            // Mesafeyi ve süreyi ekrana yazdırın
+            mesafe = parseFloat(distanceText);
+            document.getElementById('distance').innerHTML = "Mesafe : " + distanceText;
+            document.getElementById('time').innerHTML = "Süre    :   " + durationText;
+            
+    
+            var distanceValue = result.routes[0].legs[0].distance.value; // Mesafe metrik cinsinden alınıyor (metre)
+            var durationValue = result.routes[0].legs[0].duration.value; // Süre saniye cinsinden alınıyor
+            var speed = (distanceValue / durationValue) * 3.6; // Hızı km/saat cinsinden hesaplayın (1 m/saat ≈ 3.6 km/saat)
+            
+            // Hızı ekrana yazdırın
+            document.getElementById('speed').innerHTML = "Hız     :" + speed.toFixed(2) + " km/saat";
+        
+            
+        }
+
+        function getCityFromGeocodeData(data) {
+            var city = null;
+            var subCity = null;
+            if (data.results.length > 0) {
+                var components = data.results[0].address_components;
+                for (var i = 0; i < components.length; i++) {
+                    var component = components[i];
+                    if (component.types.includes('locality')) {
+                        city = component.long_name;
+                    }
+                    if (component.types.includes('administrative_area_level_2')) {
+                        subCity = component.long_name;
+                    }
+                    if (component.types.includes('administrative_area_level_1') && !city) {
+                        city = component.long_name;
+                    }
+                }
+                // Eğer "Elâzığ Merkez" gibi bir şey bulursak, şehir adını almak için subCity değerini kontrol edelim
+                if (subCity && (city && city.includes('Merkez'))) {
+                    city = subCity;
+                }
+            }
+            return city;
+        }
+
+        function timeCalculateBySpeed() {
+            // Hızı al
+            var hiz = parseFloat(document.getElementById("lspeed").value);
+    
+            if(hiz <= 0 || hiz > 400){
+                return document.getElementById("calculated-speed").textContent = "Hatalı değer girdiniz!"
+            }
+    
+            // Zamanı hesapla
+            var zaman = mesafe / hiz;
+            
+            // Zamanı formatla
+            var saat = Math.floor(zaman);
+            var dakika = Math.round((zaman - saat) * 60);
+        
+            // Sonucu ekrana yazdır
+            document.getElementById("calculated-speed").textContent = "Tahmini Varış Süresi: " + saat + " saat " + dakika + " dakika";
+        }
+
+        function checkAndCalcRoute() {
+            var start = document.getElementById('source').value;
+            var end = document.getElementById('dest').value;
+
+            if (!start || !end) {
+                alert("Lütfen başlangıç ve varış noktalarını girin.");
+            } else {
+                calcRoute();
+            }
+        }
+
+        function createUserLocationMarker(){
+            // Kullanıcının konumunu almak için geolocation API'sini kullanın
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    function(position) {
+                        var userLocation = {
+                            lat: position.coords.latitude,
+                            lng: position.coords.longitude
+                        };
+                        
+                        // Kullanıcının konumunu haritada işaretleyin
+                        var userMarker = new google.maps.Marker({
+                            position: userLocation,
+                            map: map,
+                            title: "Şuanki Konumun",
+                            icon: {
+                                url: "https://maps.google.com/mapfiles/ms/icons/blue-dot.png"
+                            }
+                        });
+
+                        // Haritanın merkezini kullanıcının konumuna ayarlayın map.setCenter(userLocation);
+                    },
+                    function() {
+                        handleLocationError(true, map.getCenter());
+                    }
+                );
+            } else {
+                // Tarayıcı geolocation desteklemiyorsa hata mesajı gösterin
+                handleLocationError(false, map.getCenter());
+            }
+    }
+    
+    function handleLocationError(browserHasGeolocation, pos) {
+        var infoWindow = new google.maps.InfoWindow({
+            map: map
+        });
+        infoWindow.setPosition(pos);
+        infoWindow.setContent(browserHasGeolocation ?
+            'Error: The Geolocation Servis Hatası.' :
+            'Error: Tarayıcınız desteklenmiyor olabilir.');
+        infoWindow.open(map);
+    }
+
+/*
+    function getBusTicketData(startCity, endCity, apiKey) {
+        var data = null;
+        var url = `https://api.collectapi.com/travel/busTicket?data.to=${encodeURIComponent(endCity)}&data.from=${encodeURIComponent(startCity)}`;
+    
+        var xhr = new XMLHttpRequest();
+        xhr.withCredentials = true;
+    
+        xhr.addEventListener("readystatechange", function () {
+            if (this.readyState === this.DONE) {
+                console.log(this.responseText);
+                var response = JSON.parse(this.responseText);
+                // displayBusTicketData(response);
+            }
+        });
+    
+        xhr.open("GET", url);
+        xhr.setRequestHeader("content-type", "application/json");
+        xhr.setRequestHeader("authorization", apiKey);
+    
+        xhr.send(data);
+    }
+    */
+/*
+    function getRoadRiskData(trackPoints) {
+        var apiUrl = 'http://127.0.0.1:8000/api/road-risk/';
+        var requestBody = {
+            track: trackPoints
+        };
+    
+        fetch(apiUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(requestBody)
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok ' + response.statusText);
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Road Risk Data:', data);
+            if (Array.isArray(data)) {
+                data.forEach(point => {
+                    console.log(`Date: ${new Date(point.dt * 1000).toLocaleString()}`);
+                    console.log(`Coordinates: ${point.coord[0]}, ${point.coord[1]}`);
+                    console.log(`Weather: Temp: ${point.weather.temp}K, Wind Speed: ${point.weather.wind_speed} m/s`);
+                    console.log(`Road Temp: ${point.road.temp}K, State: ${point.road.state}`);
+                    if (point.alerts.length > 0) {
+                        point.alerts.forEach(alert => {
+                            console.log(`Alert: ${alert.sender_name} - ${alert.event} (Level: ${alert.event_level})`);
+                        });
+                    }
+                });
+            } else {
+                console.log('Unexpected response data:', data);
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching road risk data:', error);
+        });
+    }
+    
+*/
+
+    </script>
+</body>
+</html>
